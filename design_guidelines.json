@@ -1,0 +1,226 @@
+{
+  "theme": "dark",
+  "archetype": "The Performance Pro & Cyber-Tactical (Archetype 2 / Neon Tactical)",
+  "emotional_tone": "High-octane tactical control room, elite esports clan operations, crisp precision with electric neon accents",
+  "fonts": {
+    "heading": "Outfit, 'Outfit Variable', sans-serif",
+    "body": "Plus Jakarta Sans, 'Plus Jakarta Sans Variable', sans-serif",
+    "mono": "JetBrains Mono, 'JetBrains Mono Variable', monospace",
+    "css_import": "@import \"@fontsource-variable/outfit\";\n@import \"@fontsource-variable/plus-jakarta-sans\";\n@import \"@fontsource-variable/jetbrains-mono\";",
+    "css_theme_variables": "--font-heading: 'Outfit Variable', sans-serif;\n--font-sans: 'Plus Jakarta Sans Variable', sans-serif;\n--font-mono: 'JetBrains Mono Variable', monospace;"
+  },
+  "typography": {
+    "scale_px": {
+      "display": 56,
+      "h1": 40,
+      "h2": 28,
+      "h3": 20,
+      "h4": 16,
+      "body": 16,
+      "caption": 14
+    },
+    "letter_spacing": {
+      "display": "tracking-tight",
+      "heading": "tracking-tight",
+      "labels": "tracking-[0.15em] uppercase font-mono text-xs",
+      "body": "tracking-normal"
+    }
+  },
+  "colors": {
+    "surfaces": [
+      {
+        "name": "page",
+        "kind": "solid",
+        "bg": "#0D0F12",
+        "on_bg": "#F3F4F6",
+        "on_bg_muted": "#9CA3AF",
+        "roles": {
+          "link": "#22C55E",
+          "error": "#EF4444",
+          "success": "#22C55E",
+          "warning": "#F59E0B"
+        }
+      },
+      {
+        "name": "panel",
+        "kind": "solid",
+        "bg": "#15181E",
+        "on_bg": "#F9FAFB",
+        "on_bg_muted": "#94A3B8",
+        "roles": {
+          "border": "#232834",
+          "highlight": "#1E232F"
+        }
+      },
+      {
+        "name": "card_elevated",
+        "kind": "solid",
+        "bg": "#1A1F29",
+        "on_bg": "#FFFFFF",
+        "on_bg_muted": "#94A3B8",
+        "roles": {
+          "border": "#2E3646"
+        }
+      },
+      {
+        "name": "header",
+        "kind": "glass",
+        "contrast_against": "#0F131A",
+        "guarantee": "backdrop-blur-xl bg-[#0D0F12]/85 border-b border-[#232834]",
+        "on_bg": "#FFFFFF",
+        "on_bg_muted": "#9CA3AF",
+        "roles": {
+          "badge_basic": "#3B82F6",
+          "badge_premium": "#FACC15"
+        }
+      },
+      {
+        "name": "badge_neon_green",
+        "kind": "solid",
+        "bg": "#062E1A",
+        "on_bg": "#4ADE80",
+        "on_bg_muted": "#22C55E"
+      },
+      {
+        "name": "badge_neon_yellow",
+        "kind": "solid",
+        "bg": "#2B2304",
+        "on_bg": "#FACC15",
+        "on_bg_muted": "#EAB308"
+      },
+      {
+        "name": "badge_danger",
+        "kind": "solid",
+        "bg": "#2A1215",
+        "on_bg": "#F87171",
+        "on_bg_muted": "#EF4444"
+      },
+      {
+        "name": "badge_warning",
+        "kind": "solid",
+        "bg": "#2A1C08",
+        "on_bg": "#FB923C",
+        "on_bg_muted": "#F97316"
+      },
+      {
+        "name": "inverse",
+        "kind": "solid",
+        "bg": "#FFFFFF",
+        "on_bg": "#0B0E14",
+        "on_bg_muted": "#4B5563"
+      }
+    ],
+    "accent": "#22C55E",
+    "on_accent": "#051D0F",
+    "accent_secondary": "#FACC15",
+    "on_accent_secondary": "#261D02",
+    "tokens": {
+      "background": "#0D0F12",
+      "card": "#15181E",
+      "card_foreground": "#F9FAFB",
+      "border": "#232834",
+      "primary": "#22C55E",
+      "primary_foreground": "#051D0F",
+      "secondary": "#1E232F",
+      "secondary_foreground": "#E2E8F0",
+      "muted": "#181D26",
+      "muted_foreground": "#94A3B8",
+      "accent_yellow": "#FACC15",
+      "accent_blue": "#38BDF8"
+    }
+  },
+  "entry_surfaces": {
+    "/": "command center dashboard with sticky neon currency header, live active groups grid, launch station, and collapsible binance deposit panel",
+    "/auth": "split tactical card layout — clan branding banner left, tabbed sign-in/sign-up form with instant quick-access demo and direct admin contact links right",
+    "/transactions": "ledger table surface with verified transaction tags, live filter bar, and binance confirmation badges",
+    "/coupons": "two-column tactical voucher nexus — code redemption terminal left, cryptographic coupon generator right, history logs below",
+    "/history": "color-coded combat log feed featuring Launched (green), Stopped (orange), Deleted (red), Refunded (blue) with detailed telemetry",
+    "/settings": "hardened security terminal with current/new password authentication fields and active session revocation",
+    "/admin": "compact administrative command panel with pending order approvals/refunds, user directory with credit editor, and global coupon generator"
+  },
+  "layouts": {
+    "structure": "Single-page application with responsive sticky glass topbar, compact side/sub-navigation tab bar, and high-density modular card grid",
+    "grid_system": {
+      "dashboard_hero": "grid grid-cols-1 lg:grid-cols-12 gap-6",
+      "launch_panel": "lg:col-span-7 space-y-6",
+      "buy_credits_card": "lg:col-span-5 space-y-6",
+      "active_groups_list": "col-span-full",
+      "stats_row": "grid grid-cols-2 md:grid-cols-4 gap-4"
+    },
+    "spacing": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6",
+      "card_padding": "p-5 sm:p-6",
+      "section_gap": "gap-6"
+    }
+  },
+  "visual_enhancers": {
+    "borders": "1px solid #232834 with subtle neon hover glow (hover:border-[#22C55E]/40 or hover:border-[#FACC15]/40)",
+    "glow_accents": "drop-shadow-[0_0_12px_rgba(34,197,94,0.25)] on active launch actions, drop-shadow-[0_0_12px_rgba(250,204,21,0.25)] on premium currency",
+    "background_texture": "subtle tactical micro-dot matrix pattern (radial gradient dots 1px at 24px intervals with 4% opacity)",
+    "card_corners": "rounded-xl border border-[#232834] bg-[#15181E]/95 shadow-xl backdrop-blur-sm"
+  },
+  "motion": {
+    "transitions": "transition-colors duration-150 ease-out, transition-opacity duration-150 ease-out, transition-transform 0.15s ease",
+    "hover_lift": "hover:-translate-y-0.5 transition-transform duration-150 ease-out",
+    "tab_switch": "animate-in fade-in-50 duration-200",
+    "notification": "sonner toast with richColors located at bottom-right",
+    "reduced_motion": "@media (prefers-reduced-motion: reduce) { * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }"
+  },
+  "accessibility": {
+    "contrast_check": "All text tokens exceed 4.5:1 ratio against #0D0F12, #15181E, and #1A1F29. High visibility neon badges use deep background tint with high-contrast text.",
+    "focus_states": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#22C55E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0D0F12]",
+    "aria_labels": "All icon-only buttons (copy Binance ID, refresh groups, copy coupon code, telegram, whatsapp) MUST have aria-label and data-testid."
+  },
+  "component_structure": {
+    "header": {
+      "path": "frontend/src/components/Header.tsx",
+      "description": "Sticky top bar with Clan Nexus branding, live user profile tag, Basic Credit pill (with blue/green pulse), Premium Credit pill (with gold/yellow pulse), Admin link if admin, and Logout button"
+    },
+    "buy_credits": {
+      "path": "frontend/src/components/BuyCreditsCard.tsx",
+      "description": "Collapsible card with Binance Pay ID (with one-click Copy button + toast), step-by-step payment instructions, Binance Order ID input field, Credit type selector (Basic vs Premium), and Submit Payment trigger"
+    },
+    "launch_group": {
+      "path": "frontend/src/components/LaunchGroupCard.tsx",
+      "description": "Account Region select (Bangladesh [Basic], Europe [Premium], India [Basic], Indonesia [Basic], USA [Premium], Singapore [Premium]) with region tier tags, Clan ID text input with validation, live Cost calculation pill, and Start Group button that auto-disables with clear warning when balance is insufficient"
+    },
+    "active_groups": {
+      "path": "frontend/src/components/ActiveGroupsCard.tsx",
+      "description": "Active tasks display with Refresh button (with spinning icon state), usage counter meter (e.g., '14 / 100 slots active' with visual progress bar), Stop Group trigger, and instant telemetry cards"
+    },
+    "transactions_view": {
+      "path": "frontend/src/components/TransactionHistoryView.tsx",
+      "description": "Filterable ledger table showing Order ID, Amount, Timestamp, Basic/Premium Credit split, Binance Tx ID, and glowing green 'Approved' or yellow 'Pending' status badges"
+    },
+    "coupons_view": {
+      "path": "frontend/src/components/CouponsView.tsx",
+      "description": "Redeem Coupon input form with instant credit claim, Create Coupon generator (deducts Basic or Premium credits from user balance), 'My Generated Coupons' table with copy button, and 'Coupons I Redeemed' history log"
+    },
+    "group_history_view": {
+      "path": "frontend/src/components/GroupHistoryView.tsx",
+      "description": "Audit stream of all operations with distinct color-coded badges: Launched (Green + Rocket icon), Stopped (Orange + Pause icon), Deleted (Red + Trash icon), and Refunded (Cyan/Blue + RefreshCw icon) with timestamps, Clan IDs, server numbers, and cost breakdown"
+    },
+    "settings_view": {
+      "path": "frontend/src/components/SettingsView.tsx",
+      "description": "Password management terminal with Current Password, New Password, Confirm New Password inputs, strength indicators, and Update Password trigger"
+    },
+    "admin_view": {
+      "path": "frontend/src/components/AdminView.tsx",
+      "description": "Admin console for pending deposit approvals/rejections, member ledger with live balance adjustment controls, and instant system-wide coupon minting"
+    },
+    "auth_modal_or_page": {
+      "path": "frontend/src/components/AuthView.tsx",
+      "description": "Sign In / Sign Up tabs, Username and Password inputs, quick demo account auto-fill buttons (User & Admin), and 'Need help? Contact Admin' section with WhatsApp and Telegram launch buttons"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Ensure dark mode is permanent by having class='dark' on the <html> tag in index.html.",
+    "Use JetBrains Mono or Outfit for Clan IDs, Order IDs, Coupon codes, and Credit numbers for high tactical clarity.",
+    "Make the 'Buy Credits' section collapsible with an animated chevron and persistent open/close toggle state.",
+    "Implement real-time deduction validation on 'Start Group': calculate required credits vs current user balance and show 'Insufficient Credits - Deposit More' state when credits are too low.",
+    "Provide responsive one-click 'Copy' buttons with Sonner toast feedback ('Copied Binance Pay ID to clipboard', 'Copied Coupon Code').",
+    "Support two distinct credit currencies: 'Basic Credits' (for standard regions) and 'Premium Credits' (for European/US high-performance regions).",
+    "Include sample seeded data for active groups, transaction history, redeemed coupons, and action logs so the dashboard feels fully alive out of the box.",
+    "Every clickable button, input, tab, select, and status badge must have a clear `data-testid` attribute (e.g. data-testid='start-group-btn', data-testid='clan-id-input', data-testid='binance-order-id-input', etc.)."
+  ]
+}

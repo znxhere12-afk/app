@@ -26,7 +26,8 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
   optional note. Sender is debited with a conditional update (400 on insufficient), recipient
   credited. `direction` ("in"/"out") is computed per viewer, never stored.
 - `usage_snapshots` — slot-usage timeline samples {user_id, at, total_usage, total_limit,
-  active_groups}. Appended by GET /api/groups, throttled to one sample per 20s per user.
+  active_groups, groups:[{clan_id, usage}]}. Appended by GET /api/groups, throttled to one sample
+  per 20s per user. The `groups` array powers the per-clan chart view.
 
 ## Catalog (backend/lib/catalog.py)
 - Regions: Bangladesh 100 Basic · India 120 Basic · Indonesia 110 Basic · Europe 150 Premium ·
@@ -41,9 +42,13 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
 - /payments GET/POST (submit claim → pending) — authed.
 - /groups GET (active + usage tick + timeline snapshot) · /groups POST (launch; 400 on insufficient
   tier credits) · /groups/{id}/stop POST · /groups/{id} DELETE · /history GET ·
-  /usage/timeline GET (oldest-first UsagePoint series, last 60 samples) — authed.
+  /usage/timeline GET (oldest-first UsagePoint series, last 60 samples) ·
+  /usage/timeline/groups GET (GroupTimeline: clans[] + points[{at, usage{clan_id:slots}}]) ·
+  /stats/regions GET (RegionStat[]: launches + total_cost per region, trailing 30 days,
+  sorted by launches desc) — authed.
 - /coupons POST (create, funded by balance, optional expires_in_days) · /coupons/redeem POST
-  (400 on expired/invalid) · /coupons/mine GET · /coupons/redeemed GET — authed.
+  (400 on expired/invalid) · /coupons/mine GET · /coupons/redeemed GET ·
+  /coupons/expiring GET (own active codes lapsing within 7 days) — authed.
 - /transfers GET (both directions, direction stamped) · /transfers POST (400 self-send or
   insufficient, 404 unknown recipient) — authed.
 - /admin/* (require_admin): GET users · POST users/{id}/credits (delta, floors at 0) · GET payments ·
@@ -55,11 +60,15 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
 - RequireAuth/RequireAdmin gate on the shared `["me"]` query (lib/useMe.ts); lib/session.ts owns cache
   lifecycle (beginSession/endSession with hard redirect).
 - Header: sticky, brand, nav, live Basic/Premium balance pills, username, logout.
-- Dashboard: stats row + LaunchGroupCard (region dropdown with tier tags + cost, Clan ID input,
-  Start button disabled on insufficient credits with warning) + UsageTimelineCard (recharts area
-  chart of slots used vs capacity, polls every 15s) + ActiveGroupsCard (refresh, usage
-  counter 0/100, stop/delete) + collapsible BuyCreditsCard (pack grid → Binance Pay ID + copy →
-  Order ID → submit) + CreditTransferCard (recipient/type/amount/note form + in-out transfer log).
+- Dashboard: ExpiryRemindersCard banner (own coupons lapsing within 7 days, shown only when any
+  exist) + stats row + LaunchGroupCard (region dropdown with tier tags + cost, Clan ID input,
+  Start button disabled on insufficient credits with warning) + UsageTimelineCard (Total tab =
+  area chart of slots vs capacity; Per Clan tab = one line per clan with a "fastest burner"
+  callout; polls every 15s) + ActiveGroupsCard (refresh, usage counter 0/100, stop/delete) +
+  collapsible BuyCreditsCard (pack grid → Binance Pay ID + copy → Order ID → submit) +
+  CreditTransferCard (recipient/type/amount/note form + in-out transfer log).
+- History page: RegionComparisonCard (30-day launch/spend totals, tier-coloured bar chart, per-region
+  rows) above the colour-coded activity feed.
 - Coupons page: create form carries an "Expires After" select (never / 1 / 7 / 30 / 90 days);
   generated list shows the expiry date and an active/redeemed/expired badge.
 - All interactive elements carry kebab-case data-testids.

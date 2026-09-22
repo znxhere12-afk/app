@@ -3,7 +3,7 @@ import uuid
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
-from pymongo import DESCENDING
+from pymongo import ASCENDING, DESCENDING
 
 from lib.dates import now_utc
 from lib.db import db
@@ -31,6 +31,24 @@ def generate_code() -> str:
 
 def expiry_from_days(days: int | None):
     return None if days is None else now_utc() + timedelta(days=days)
+
+
+@router.get("/coupons/expiring", response_model=list[Coupon])
+async def expiring_coupons(user: UserOut = Depends(get_current_user)):
+    """Own active codes lapsing within a week — drives the dashboard reminder."""
+    now = now_utc()
+    docs = (
+        await db.coupons.find(
+            {
+                "creator_id": user.id,
+                "status": "active",
+                "expires_at": {"$gt": now, "$lte": now + timedelta(days=7)},
+            }
+        )
+        .sort("expires_at", ASCENDING)
+        .to_list(100)
+    )
+    return [to_coupon(d) for d in docs]
 
 
 @router.get("/coupons/mine", response_model=list[Coupon])

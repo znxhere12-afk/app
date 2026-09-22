@@ -114,3 +114,20 @@ export interface UsagePoint {
   total_limit: number;
   active_groups: number;
 }
+
+export interface GroupUsagePoint {
+  at: string;
+  usage: Record<string, number>;
+}
+
+export interface GroupTimeline {
+  clans: string[];
+  points: GroupUsagePoint[];
+}
+
+export interface RegionStat {
+  region_name: string;
+  tier: CreditType;
+  launches: number;
+  total_cost: number;
+}

@@ -1,6 +1,6 @@
 import random
 import uuid
-from datetime import timezone
+from datetime import timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from pymongo import DESCENDING
@@ -13,10 +13,11 @@ from models.auth import UserOut
 from models.catalog import Catalog
 from models.groups import Group, GroupAction, GroupCreate, GroupEvent, Region
 from models.payments import CreditType, Pack
-from models.usage import UsagePoint
+from models.usage import GroupTimeline, GroupUsagePoint, RegionStat, UsagePoint
 
 router = APIRouter(tags=["groups"])
 _SNAPSHOT_MIN_GAP_SECONDS = 20  # keep the timeline readable instead of one point per poll
+_REGION_STATS_WINDOW_DAYS = 30
 
 
 def to_group(doc: dict) -> Group:
@@ -65,6 +66,8 @@ async def record_usage_snapshot(user_id: str, groups: list[dict]) -> None:
             "total_usage": sum(g["usage"] for g in groups),
             "total_limit": sum(g["usage_limit"] for g in groups),
             "active_groups": len(groups),
+            # per-clan breakdown powers the "Per Clan" view of the timeline chart
+            "groups": [{"clan_id": g["clan_id"], "usage": g["usage"]} for g in groups],
         }
     )
 
@@ -78,6 +81,48 @@ async def usage_timeline(user: UserOut = Depends(get_current_user)):
         .to_list(60)
     )
     return [UsagePoint(**clean_doc(d)) for d in reversed(docs)]
+
+
+@router.get("/usage/timeline/groups", response_model=GroupTimeline)
+async def usage_timeline_by_group(user: UserOut = Depends(get_current_user)):
+    """Same series split per clan, so a commander can see which group burns slots fastest."""
+    docs = (
+        await db.usage_snapshots.find({"user_id": user.id, "groups": {"$exists": True}})
+        .sort("at", DESCENDING)
+        .to_list(60)
+    )
+    points: list[GroupUsagePoint] = []
+    clans: list[str] = []
+    for d in reversed(docs):
+        usage = {g["clan_id"]: g["usage"] for g in d.get("groups", [])}
+        for clan in usage:
+            if clan not in clans:
+                clans.append(clan)
+        points.append(GroupUsagePoint(at=clean_doc(d)["at"], usage=usage))
+    return GroupTimeline(clans=clans, points=points)
+
+
+@router.get("/stats/regions", response_model=list[RegionStat])
+async def region_stats(user: UserOut = Depends(get_current_user)):
+    """Launch counts and credit spend per region over the trailing 30 days."""
+    since = now_utc() - timedelta(days=_REGION_STATS_WINDOW_DAYS)
+    docs = await db.group_events.find(
+        {"user_id": user.id, "action": "launched", "created_at": {"$gte": since}}
+    ).to_list(1000)
+
+    buckets: dict[str, dict] = {}
+    for d in docs:
+        key = d["region_name"]
+        bucket = buckets.setdefault(
+            key, {"region_name": key, "tier": d["tier"], "launches": 0, "total_cost": 0}
+        )
+        bucket["launches"] += 1
+        bucket["total_cost"] += d["cost"]
+
+    return [
+        RegionStat(**b)
+        for b in sorted(buckets.values(), key=lambda b: (-b["launches"], b["region_name"]))
+    ]
 
 
 @router.get("/catalog", response_model=Catalog)

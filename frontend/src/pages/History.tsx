@@ -4,6 +4,7 @@ import { Pause, Rocket, RotateCcw, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import RegionComparisonCard from "@/components/RegionComparisonCard";
 import { apiGet } from "@/lib/api";
 import { fmtDateTime, fmtNumber } from "@/lib/format";
 import type { GroupAction, GroupEvent } from "@/lib/types";
@@ -46,6 +47,8 @@ export default function History() {
           Full activity log — every launch, stop, delete and refund on your account.
         </p>
       </div>
+
+      <RegionComparisonCard />
 
       <Card className="rounded-xl border-[#232834] bg-[#15181E]/95 shadow-xl backdrop-blur-sm">
         <CardContent className="space-y-2 p-4">

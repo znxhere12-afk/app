@@ -5,6 +5,7 @@ import { useMe } from "@/lib/useMe";
 import ActiveGroupsCard from "@/components/ActiveGroupsCard";
 import BuyCreditsCard from "@/components/BuyCreditsCard";
 import CreditTransferCard from "@/components/CreditTransferCard";
+import ExpiryRemindersCard from "@/components/ExpiryRemindersCard";
 import LaunchGroupCard from "@/components/LaunchGroupCard";
 import UsageTimelineCard from "@/components/UsageTimelineCard";
 import type { Group } from "@/lib/types";
@@ -39,6 +40,8 @@ export default function Dashboard() {
           Welcome back, {me?.username ?? "commander"} — launch groups and track your credits.
         </p>
       </div>
+
+      <ExpiryRemindersCard />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4" data-testid="stats-row">
         <Stat label="Basic Credits" value={fmtNumber(me?.basic_credits ?? 0)} testid="stat-basic-credits" />

@@ -209,6 +209,11 @@ async def main() -> None:
                     now - timedelta(days=2), expires_at=now + timedelta(days=30),
                 ),
                 coupon_doc("NX-PLAYR100", "basic", 100, demo["id"], demo["username"], now - timedelta(days=1)),
+                # player1-owned code lapsing soon — drives the dashboard expiry reminder
+                coupon_doc(
+                    "NX-SOON48H", "basic", 60, demo["id"], demo["username"],
+                    now - timedelta(days=5), expires_at=now + timedelta(days=2),
+                ),
                 coupon_doc(
                     "NX-GIFT4YOU", "basic", 50, admin["id"], admin["username"], now - timedelta(days=4),
                     redeemed_by=demo["id"], redeemed_by_username=demo["username"],
@@ -253,17 +258,24 @@ async def main() -> None:
     if await db.usage_snapshots.count_documents({}) == 0:
         # 24 hourly samples so the timeline chart is populated on first load
         samples = []
-        usage = 8
+        usage_a = 4
+        usage_b = 2
         for i in range(24, 0, -1):
-            usage = min(200, usage + (3 + (i * 7) % 9))
+            usage_a = min(100, usage_a + (2 + (i * 5) % 6))
+            usage_b = min(100, usage_b + (1 + (i * 3) % 4))
             samples.append(
                 {
                     "id": str(uuid.uuid4()),
                     "user_id": demo["id"],
                     "at": now - timedelta(hours=i),
-                    "total_usage": usage,
+                    "total_usage": usage_a + usage_b,
                     "total_limit": 200,
                     "active_groups": 2,
+                    # per-clan breakdown powers the "Per Clan" timeline view
+                    "groups": [
+                        {"clan_id": "584213676", "usage": usage_a},
+                        {"clan_id": "771902455", "usage": usage_b},
+                    ],
                 }
             )
         await db.usage_snapshots.insert_many(samples)

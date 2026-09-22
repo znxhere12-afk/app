@@ -7,6 +7,7 @@ import BuyCreditsCard from "@/components/BuyCreditsCard";
 import CreditTransferCard from "@/components/CreditTransferCard";
 import ExpiryRemindersCard from "@/components/ExpiryRemindersCard";
 import LaunchGroupCard from "@/components/LaunchGroupCard";
+import SlotAlertsCard from "@/components/SlotAlertsCard";
 import UsageTimelineCard from "@/components/UsageTimelineCard";
 import type { Group } from "@/lib/types";
 
@@ -41,6 +42,7 @@ export default function Dashboard() {
         </p>
       </div>
 
+      <SlotAlertsCard />
       <ExpiryRemindersCard />
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4" data-testid="stats-row">

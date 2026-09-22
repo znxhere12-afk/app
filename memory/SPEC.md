@@ -60,13 +60,18 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
 - RequireAuth/RequireAdmin gate on the shared `["me"]` query (lib/useMe.ts); lib/session.ts owns cache
   lifecycle (beginSession/endSession with hard redirect).
 - Header: sticky, brand, nav, live Basic/Premium balance pills, username, logout.
-- Dashboard: ExpiryRemindersCard banner (own coupons lapsing within 7 days, shown only when any
-  exist) + stats row + LaunchGroupCard (region dropdown with tier tags + cost, Clan ID input,
-  Start button disabled on insufficient credits with warning) + UsageTimelineCard (Total tab =
-  area chart of slots vs capacity; Per Clan tab = one line per clan with a "fastest burner"
-  callout; polls every 15s) + ActiveGroupsCard (refresh, usage counter 0/100, stop/delete) +
-  collapsible BuyCreditsCard (pack grid → Binance Pay ID + copy → Order ID → submit) +
-  CreditTransferCard (recipient/type/amount/note form + in-out transfer log).
+- Dashboard: SlotAlertsCard (clans at ≥90% of their slot limit — 9/10, 90/100 — with a one-shot
+  sonner warning per crossing; hidden when none) + ExpiryRemindersCard banner (own coupons lapsing
+  within 7 days, shown only when any exist) + stats row + LaunchGroupCard (region dropdown with
+  tier tags + cost, Clan ID input, Start button disabled on insufficient credits with warning) +
+  UsageTimelineCard (Total tab = area chart of slots vs capacity; Per Clan tab = one line per clan
+  with a "fastest burner" callout; polls every 15s) + ActiveGroupsCard (refresh, usage counter
+  0/100 whose meter turns orange at ≥90% and red at capacity, stop/delete) + collapsible
+  BuyCreditsCard (pack grid → Binance Pay ID + copy → Order ID → submit) + CreditTransferCard
+  (recipient/type/amount/note form + in-out transfer log).
+- `frontend/src/lib/slots.ts` owns the capacity threshold (`SLOT_ALERT_RATIO = 0.9`) plus
+  `usageRatio`/`isNearCapacity`/`isAtCapacity`, so the alert card and the active-groups meter
+  cannot drift. Slot alerts are derived from the existing `["groups"]` query — no extra endpoint.
 - History page: RegionComparisonCard (30-day launch/spend totals, tier-coloured bar chart, per-region
   rows) above the colour-coded activity feed.
 - Coupons page: create form carries an "Expires After" select (never / 1 / 7 / 30 / 90 days);

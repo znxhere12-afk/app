@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
 import { apiErrorMessage, fmtDateTime, fmtNumber } from "@/lib/format";
+import { isAtCapacity, isNearCapacity } from "@/lib/slots";
 import type { Group } from "@/lib/types";
 
 function tierBadgeClass(tier: "basic" | "premium") {
@@ -78,6 +79,9 @@ export default function ActiveGroupsCard() {
         ) : (
           (groups ?? []).map((g) => {
             const pct = Math.min(100, Math.round((g.usage / g.usage_limit) * 100));
+            const full = isAtCapacity(g);
+            const near = isNearCapacity(g);
+            const barClass = full ? "bg-[#EF4444]" : near ? "bg-[#F97316]" : "bg-primary";
             return (
               <div
                 key={g.id}
@@ -126,11 +130,17 @@ export default function ActiveGroupsCard() {
                     <span data-testid={`group-usage-${g.id}`} className="font-mono">
                       {g.usage} / {g.usage_limit} slots
                     </span>
-                    <span className="font-mono">{pct}%</span>
+                    <span
+                      className={`font-mono ${
+                        full ? "text-[#F87171]" : near ? "text-[#FB923C]" : ""
+                      }`}
+                    >
+                      {pct}%
+                    </span>
                   </div>
                   <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1E232F]">
                     <div
-                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      className={`h-full rounded-full transition-all duration-500 ${barClass}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>

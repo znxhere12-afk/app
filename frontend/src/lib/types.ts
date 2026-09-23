@@ -67,6 +67,7 @@ export interface Group {
   status: GroupStatus;
   launched_at: string;
   auto_stopped: boolean;
+  relaunched: boolean;
 }
 
 export interface GroupEvent {

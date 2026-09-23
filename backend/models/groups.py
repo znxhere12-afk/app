@@ -37,6 +37,8 @@ class Group(BaseModel):
     launched_at: datetime
     # True when the platform stopped it at capacity rather than a human clicking Stop.
     auto_stopped: bool = False
+    # True once a replacement run has been launched from this group, so the offer disappears.
+    relaunched: bool = False
 
 
 class GroupEvent(BaseModel):

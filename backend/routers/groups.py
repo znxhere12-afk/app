@@ -182,11 +182,8 @@ async def my_active_groups(user: UserOut = Depends(get_current_user)):
     return out + just_auto_stopped
 
 
-@router.post("/groups", response_model=Group, status_code=201)
-async def launch_group(payload: GroupCreate, user: UserOut = Depends(get_current_user)):
-    region = find_region(payload.region_id)
-    if region is None:
-        raise HTTPException(status_code=404, detail="Unknown region")
+async def charge_and_create_group(user: UserOut, region: dict, clan_id: str) -> Group:
+    """Debit the region's cost from the right credit pot, then start a fresh run."""
     credit_field = "basic_credits" if region["tier"] == "basic" else "premium_credits"
     charged = await db.users.update_one(
         {"id": user.id, credit_field: {"$gte": region["cost"]}},
@@ -201,7 +198,7 @@ async def launch_group(payload: GroupCreate, user: UserOut = Depends(get_current
         id=str(uuid.uuid4()),
         user_id=user.id,
         username=user.username,
-        clan_id=payload.clan_id,
+        clan_id=clan_id,
         region_id=region["id"],
         region_name=region["name"],
         tier=region["tier"],
@@ -222,6 +219,54 @@ async def launch_group(payload: GroupCreate, user: UserOut = Depends(get_current
         cost=group.cost,
         server_number=group.server_number,
     )
+    return group
+
+
+@router.post("/groups", response_model=Group, status_code=201)
+async def launch_group(payload: GroupCreate, user: UserOut = Depends(get_current_user)):
+    region = find_region(payload.region_id)
+    if region is None:
+        raise HTTPException(status_code=404, detail="Unknown region")
+    return await charge_and_create_group(user, region, payload.clan_id)
+
+
+@router.get("/groups/relaunchable", response_model=list[Group])
+async def relaunchable_groups(user: UserOut = Depends(get_current_user)):
+    """Clans that filled up and auto-stopped, still awaiting a replacement run."""
+    docs = (
+        await db.groups.find(
+            {
+                "user_id": user.id,
+                "status": "stopped",
+                "auto_stopped": True,
+                "relaunched": {"$ne": True},
+            }
+        )
+        .sort("launched_at", DESCENDING)
+        .to_list(10)
+    )
+    return [to_group(d) for d in docs]
+
+
+@router.post("/groups/{group_id}/relaunch", response_model=Group, status_code=201)
+async def relaunch_group(group_id: str, user: UserOut = Depends(get_current_user)):
+    """One-tap restart of a finished clan on the same region, charged at the current cost."""
+    old = await db.groups.find_one({"id": group_id, "user_id": user.id})
+    if old is None:
+        raise HTTPException(status_code=404, detail="Group not found")
+    if old["status"] == "running":
+        raise HTTPException(status_code=400, detail="That group is still running")
+    if old.get("relaunched"):
+        raise HTTPException(
+            status_code=400,
+            detail="This run was already relaunched — use Launch New Group for another",
+        )
+    region = find_region(old["region_id"])
+    if region is None:
+        raise HTTPException(status_code=404, detail="That region is no longer available")
+
+    group = await charge_and_create_group(user, region, old["clan_id"])
+    await db.groups.update_one({"id": group_id}, {"$set": {"relaunched": True}})
     return group
 
 

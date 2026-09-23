@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
 import { apiErrorMessage, fmtDateTime, fmtNumber } from "@/lib/format";
 import { isAtCapacity, isNearCapacity } from "@/lib/slots";
+import { useRelaunchGroup } from "@/lib/useRelaunchGroup";
 import type { Group } from "@/lib/types";
 
 function tierBadgeClass(tier: "basic" | "premium") {
@@ -30,6 +31,7 @@ export default function ActiveGroupsCard() {
   const running = (groups ?? []).filter((g) => g.status === "running");
   const autoStopped = (groups ?? []).filter((g) => g.status === "stopped" && g.auto_stopped);
   const announced = useRef<Set<string>>(new Set());
+  const relaunch = useRelaunchGroup();
 
   useEffect(() => {
     if (autoStopped.length === 0) return;
@@ -40,10 +42,18 @@ export default function ActiveGroupsCard() {
       fresh = true;
       toast.warning(`Clan ${g.clan_id} auto-stopped at capacity`, {
         description: `All ${g.usage_limit} slots were used on server #${g.server_number} (${g.region_name}) — no slots wasted.`,
+        duration: 12000,
+        action: {
+          label: `Relaunch · ${g.cost}`,
+          onClick: () => relaunch.mutate(g.id),
+        },
       });
     }
-    if (fresh) void qc.invalidateQueries({ queryKey: ["history"] });
-  }, [autoStopped, qc]);
+    if (fresh) {
+      void qc.invalidateQueries({ queryKey: ["history"] });
+      void qc.invalidateQueries({ queryKey: ["groups-relaunchable"] });
+    }
+  }, [autoStopped, qc, relaunch]);
 
   const totalUsage = running.reduce((acc, g) => acc + g.usage, 0);
   const totalLimit = running.reduce((acc, g) => acc + g.usage_limit, 0);

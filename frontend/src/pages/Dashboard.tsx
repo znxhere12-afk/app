@@ -7,6 +7,7 @@ import BuyCreditsCard from "@/components/BuyCreditsCard";
 import CreditTransferCard from "@/components/CreditTransferCard";
 import ExpiryRemindersCard from "@/components/ExpiryRemindersCard";
 import LaunchGroupCard from "@/components/LaunchGroupCard";
+import RelaunchCard from "@/components/RelaunchCard";
 import SlotAlertsCard from "@/components/SlotAlertsCard";
 import UsageTimelineCard from "@/components/UsageTimelineCard";
 import type { Group } from "@/lib/types";
@@ -43,6 +44,7 @@ export default function Dashboard() {
         </p>
       </div>
 
+      <RelaunchCard />
       <SlotAlertsCard />
       <ExpiryRemindersCard />
 

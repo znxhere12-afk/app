@@ -12,13 +12,17 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
   binance_order_id, status pending→approved/rejected/refunded, reviewed_at/by. Credits land ONLY on
   admin approval.
 - `groups` — launched service runs: clan_id (4–18 digits), region, tier, cost, server_number (1–64),
-  usage/usage_limit (100), status running→stopped/refunded, `auto_stopped` bool.
+  usage/usage_limit (100), status running→stopped/refunded, `auto_stopped` bool, `relaunched` bool.
   **Auto-stop at capacity**: GET /api/groups ticks usage forward (simulated telemetry: +0–3 per
   read) and any group reaching its usage_limit is stopped right there — status `stopped`,
   `auto_stopped=true`, plus a `stopped` group_event with `auto=true`. A freshly auto-stopped group
   rides along in that ONE response (later calls query status="running" only) so the client can
   announce it without guessing; the frontend renders only `status === "running"` and toasts the
-  auto-stopped ones.
+  auto-stopped ones (toast carries a Relaunch action).
+  **Relaunch**: POST /api/groups/{id}/relaunch starts a new run with the same clan_id + region at
+  the current cost, logs a normal `launched` event, and marks the source group `relaunched=true`
+  so the offer disappears and a retry/double-click cannot double-charge (400 on a second attempt,
+  400 if the source is still running, 400 on insufficient credits, 404 if unknown).
 - `group_events` — audit log: action launched|stopped|deleted|refunded + clan_id, region, tier,
   server_number, cost, `auto` bool (true only for capacity auto-stops, shown as an "auto" badge).
 - `coupons` — code (NX-XXXXXXXX unique), credit_type, amount, creator, status active→redeemed,
@@ -45,8 +49,10 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
   /auth/me GET · /auth/password POST (change password). Session = JWT in httpOnly cookie `cn_session`.
 - /catalog GET (regions, packs, binance_pay_id) — authed.
 - /payments GET/POST (submit claim → pending) — authed.
-- /groups GET (active + usage tick + timeline snapshot) · /groups POST (launch; 400 on insufficient
-  tier credits) · /groups/{id}/stop POST · /groups/{id} DELETE · /history GET ·
+- /groups GET (active + usage tick + auto-stop at capacity + timeline snapshot) · /groups POST
+  (launch; 400 on insufficient tier credits) · /groups/relaunchable GET (auto-stopped runs still
+  awaiting a replacement) · /groups/{id}/relaunch POST · /groups/{id}/stop POST ·
+  /groups/{id} DELETE · /history GET ·
   /usage/timeline GET (oldest-first UsagePoint series, last 60 samples) ·
   /usage/timeline/groups GET (GroupTimeline: clans[] + points[{at, usage{clan_id:slots}}]) ·
   /stats/regions GET (RegionStat[]: launches + total_cost per region, trailing 30 days,
@@ -65,8 +71,9 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
 - RequireAuth/RequireAdmin gate on the shared `["me"]` query (lib/useMe.ts); lib/session.ts owns cache
   lifecycle (beginSession/endSession with hard redirect).
 - Header: sticky, brand, nav, live Basic/Premium balance pills, username, logout.
-- Dashboard: SlotAlertsCard (clans at ≥90% of their slot limit — 9/10, 90/100 — with a one-shot
-  sonner warning per crossing; hidden when none) + ExpiryRemindersCard banner (own coupons lapsing
+- Dashboard: RelaunchCard (one-tap restart of clans that filled, with cost badge and a
+  low-credits-disabled button; hidden when no offers) + SlotAlertsCard (clans at ≥90% of their slot
+  limit — 9/10, 90/100 — with a one-shot sonner warning per crossing; hidden when none) + ExpiryRemindersCard banner (own coupons lapsing
   within 7 days, shown only when any exist) + stats row + LaunchGroupCard (region dropdown with
   tier tags + cost, Clan ID input, Start button disabled on insufficient credits with warning) +
   UsageTimelineCard (Total tab = area chart of slots vs capacity; Per Clan tab = one line per clan
@@ -77,6 +84,8 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
 - `frontend/src/lib/slots.ts` owns the capacity threshold (`SLOT_ALERT_RATIO = 0.9`) plus
   `usageRatio`/`isNearCapacity`/`isAtCapacity`, so the alert card and the active-groups meter
   cannot drift. Slot alerts are derived from the existing `["groups"]` query — no extra endpoint.
+- `frontend/src/lib/useRelaunchGroup.ts` owns the relaunch mutation + cache invalidation, shared by
+  RelaunchCard and the auto-stop toast action.
 - History page: RegionComparisonCard (30-day launch/spend totals, tier-coloured bar chart, per-region
   rows) above the colour-coded activity feed.
 - Coupons page: create form carries an "Expires After" select (never / 1 / 7 / 30 / 90 days);

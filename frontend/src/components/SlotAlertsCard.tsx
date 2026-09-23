@@ -18,7 +18,7 @@ export default function SlotAlertsCard() {
     retry: false,
   });
 
-  const critical = (groups ?? []).filter(isNearCapacity);
+  const critical = (groups ?? []).filter((g) => g.status === "running" && isNearCapacity(g));
   // Ids already toasted, so a steady-state alert doesn't re-toast on every poll.
   const announced = useRef<Set<string>>(new Set());
 
@@ -83,7 +83,7 @@ export default function SlotAlertsCard() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   {full
-                    ? "Capacity reached — stop the group or launch a fresh one."
+                    ? "Capacity reached — stopping automatically."
                     : `${g.usage_limit - g.usage} slots left · ${g.region_name} · server #${g.server_number}`}
                 </p>
               </div>

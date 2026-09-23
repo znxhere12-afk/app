@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pause, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,8 +26,27 @@ export default function ActiveGroupsCard() {
     refetchInterval: 15000,
   });
 
-  const totalUsage = groups?.reduce((acc, g) => acc + g.usage, 0) ?? 0;
-  const totalLimit = groups?.reduce((acc, g) => acc + g.usage_limit, 0) ?? 0;
+  // The backend rides freshly auto-stopped groups along for one response; show only the live ones.
+  const running = (groups ?? []).filter((g) => g.status === "running");
+  const autoStopped = (groups ?? []).filter((g) => g.status === "stopped" && g.auto_stopped);
+  const announced = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (autoStopped.length === 0) return;
+    let fresh = false;
+    for (const g of autoStopped) {
+      if (announced.current.has(g.id)) continue;
+      announced.current.add(g.id);
+      fresh = true;
+      toast.warning(`Clan ${g.clan_id} auto-stopped at capacity`, {
+        description: `All ${g.usage_limit} slots were used on server #${g.server_number} (${g.region_name}) — no slots wasted.`,
+      });
+    }
+    if (fresh) void qc.invalidateQueries({ queryKey: ["history"] });
+  }, [autoStopped, qc]);
+
+  const totalUsage = running.reduce((acc, g) => acc + g.usage, 0);
+  const totalLimit = running.reduce((acc, g) => acc + g.usage_limit, 0);
 
   const stop = useMutation({
     mutationFn: (id: string) => apiPost<Group>(`/groups/${id}/stop`),
@@ -72,12 +92,12 @@ export default function ActiveGroupsCard() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-3">
-        {(groups ?? []).length === 0 ? (
+        {running.length === 0 ? (
           <p data-testid="no-active-groups" className="py-8 text-center text-sm text-muted-foreground">
             No active groups — launch one above.
           </p>
         ) : (
-          (groups ?? []).map((g) => {
+          running.map((g) => {
             const pct = Math.min(100, Math.round((g.usage / g.usage_limit) * 100));
             const full = isAtCapacity(g);
             const near = isNearCapacity(g);
@@ -149,6 +169,9 @@ export default function ActiveGroupsCard() {
             );
           })
         )}
+        <p className="pt-1 text-center text-[11px] text-muted-foreground">
+          Groups stop automatically the moment they fill, so no slots are wasted.
+        </p>
       </CardContent>
     </Card>
   );

@@ -12,10 +12,15 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
   binance_order_id, status pending→approved/rejected/refunded, reviewed_at/by. Credits land ONLY on
   admin approval.
 - `groups` — launched service runs: clan_id (4–18 digits), region, tier, cost, server_number (1–64),
-  usage/usage_limit (100), status running→stopped/refunded. GET /api/groups ticks usage forward
-  (simulated telemetry: +0–3 per read) so the refresh button shows live movement.
+  usage/usage_limit (100), status running→stopped/refunded, `auto_stopped` bool.
+  **Auto-stop at capacity**: GET /api/groups ticks usage forward (simulated telemetry: +0–3 per
+  read) and any group reaching its usage_limit is stopped right there — status `stopped`,
+  `auto_stopped=true`, plus a `stopped` group_event with `auto=true`. A freshly auto-stopped group
+  rides along in that ONE response (later calls query status="running" only) so the client can
+  announce it without guessing; the frontend renders only `status === "running"` and toasts the
+  auto-stopped ones.
 - `group_events` — audit log: action launched|stopped|deleted|refunded + clan_id, region, tier,
-  server_number, cost. Refund events written by admin group refund.
+  server_number, cost, `auto` bool (true only for capacity auto-stops, shown as an "auto" badge).
 - `coupons` — code (NX-XXXXXXXX unique), credit_type, amount, creator, status active→redeemed,
   redeemed_by/at, `expires_at` (nullable). Creating a coupon deducts the amount from the creator's
   balance; admin minting is system-funded (no deduction). **Expiry**: `expires_at` is set from

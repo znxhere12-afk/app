@@ -35,6 +35,8 @@ class Group(BaseModel):
     usage_limit: int
     status: GroupStatus
     launched_at: datetime
+    # True when the platform stopped it at capacity rather than a human clicking Stop.
+    auto_stopped: bool = False
 
 
 class GroupEvent(BaseModel):
@@ -47,3 +49,4 @@ class GroupEvent(BaseModel):
     server_number: int | None = None
     cost: int
     created_at: datetime
+    auto: bool = False

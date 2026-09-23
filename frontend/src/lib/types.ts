@@ -66,6 +66,7 @@ export interface Group {
   usage_limit: number;
   status: GroupStatus;
   launched_at: string;
+  auto_stopped: boolean;
 }
 
 export interface GroupEvent {
@@ -78,6 +79,7 @@ export interface GroupEvent {
   server_number: number | null;
   cost: number;
   created_at: string;
+  auto: boolean;
 }
 
 export interface Coupon {

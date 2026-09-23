@@ -82,6 +82,15 @@ export default function History() {
                       >
                         {meta.label}
                       </Badge>
+                      {e.auto && (
+                        <Badge
+                          variant="outline"
+                          data-testid={`history-auto-${e.id}`}
+                          className="border-[#38BDF8]/40 text-[#7DD3FC]"
+                        >
+                          auto
+                        </Badge>
+                      )}
                       <span className="font-mono text-sm font-bold">Clan {e.clan_id}</span>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">

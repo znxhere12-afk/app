@@ -30,8 +30,9 @@ export default function Dashboard() {
     refetchInterval: 15000,
   });
 
-  const activeCount = groups?.length ?? 0;
-  const slotsInUse = groups?.reduce((acc, g) => acc + g.usage, 0) ?? 0;
+  const activeCount = groups?.filter((g) => g.status === "running").length ?? 0;
+  const slotsInUse =
+    groups?.filter((g) => g.status === "running").reduce((acc, g) => acc + g.usage, 0) ?? 0;
 
   return (
     <div className="space-y-6">

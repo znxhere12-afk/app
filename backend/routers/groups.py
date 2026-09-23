@@ -33,6 +33,7 @@ async def log_event(
     tier: CreditType,
     cost: int,
     server_number: int | None,
+    auto: bool = False,
 ) -> None:
     event = GroupEvent(
         id=str(uuid.uuid4()),
@@ -44,6 +45,7 @@ async def log_event(
         server_number=server_number,
         cost=cost,
         created_at=now_utc(),
+        auto=auto,
     )
     await db.group_events.insert_one(event.model_dump())
 
@@ -136,21 +138,48 @@ async def get_catalog(user: UserOut = Depends(get_current_user)):
 
 @router.get("/groups", response_model=list[Group])
 async def my_active_groups(user: UserOut = Depends(get_current_user)):
-    """Running groups for the caller. Each read ticks the usage meter forward (simulated telemetry)."""
+    """Running groups for the caller. Each read ticks the usage meter forward (simulated
+    telemetry) and auto-stops any group that has filled, so no slots sit idle."""
     docs = (
         await db.groups.find({"user_id": user.id, "status": "running"})
         .sort("launched_at", DESCENDING)
         .to_list(500)
     )
     out = []
+    still_running = []
+    just_auto_stopped = []
     for d in docs:
         ticked = min(d["usage_limit"], d["usage"] + random.randint(0, 3))
         if ticked != d["usage"]:
             await db.groups.update_one({"id": d["id"]}, {"$set": {"usage": ticked}})
             d["usage"] = ticked
+
+        if d["usage"] >= d["usage_limit"]:
+            # capacity reached — stop it here and record why
+            await db.groups.update_one(
+                {"id": d["id"]}, {"$set": {"status": "stopped", "auto_stopped": True}}
+            )
+            d["status"] = "stopped"
+            d["auto_stopped"] = True
+            await log_event(
+                user.id,
+                "stopped",
+                clan_id=d["clan_id"],
+                region_name=d["region_name"],
+                tier=d["tier"],
+                cost=d["cost"],
+                server_number=d["server_number"],
+                auto=True,
+            )
+            just_auto_stopped.append(to_group(d))
+            continue
+
+        still_running.append(d)
         out.append(to_group(d))
-    await record_usage_snapshot(user.id, docs)
-    return out
+    await record_usage_snapshot(user.id, still_running)
+    # The freshly auto-stopped ones ride along for exactly this one response (the next call
+    # queries status="running" only), so the client can announce them without guessing.
+    return out + just_auto_stopped
 
 
 @router.post("/groups", response_model=Group, status_code=201)

@@ -4,6 +4,7 @@ import { Pause, Rocket, RotateCcw, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import RelaunchHistoryCard from "@/components/RelaunchHistoryCard";
 import RegionComparisonCard from "@/components/RegionComparisonCard";
 import { apiGet } from "@/lib/api";
 import { fmtDateTime, fmtNumber } from "@/lib/format";
@@ -48,6 +49,7 @@ export default function History() {
         </p>
       </div>
 
+      <RelaunchHistoryCard />
       <RegionComparisonCard />
 
       <Card className="rounded-xl border-[#232834] bg-[#15181E]/95 shadow-xl backdrop-blur-sm">

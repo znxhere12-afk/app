@@ -15,6 +15,52 @@ export interface User {
   premium_credits: number;
   is_admin: boolean;
   created_at: string;
+  rules_accepted_at: string | null;
+  unlocked: boolean;
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  account_count: number;
+  duration_minutes: number;
+  extra_cost: number;
+}
+
+export interface PlayerAccount {
+  id: string;
+  group_id: string;
+  user_id: string;
+  slot: number;
+  ign: string;
+  uid: string;
+  clan_id: string;
+  status: "online" | "offline";
+  join_request: "sent" | "accepted";
+  cycles: number;
+  created_at: string;
+}
+
+export interface AccessCode {
+  id: string;
+  code: string;
+  created_by: string;
+  note: string | null;
+  used_by: string | null;
+  used_by_username: string | null;
+  created_at: string;
+  used_at: string | null;
+}
+
+export interface ClanCycleStat {
+  clan_id: string;
+  region_name: string;
+  cycles: number;
+  total_cost: number;
+  basic_cost: number;
+  premium_cost: number;
+  first_launch: string;
+  last_launch: string;
 }
 
 export interface Region {
@@ -34,7 +80,10 @@ export interface Pack {
 export interface Catalog {
   regions: Region[];
   packs: Pack[];
+  plans: Plan[];
   binance_pay_id: string;
+  game: string;
+  clan_war_rules: string[];
 }
 
 export interface Payment {
@@ -66,7 +115,14 @@ export interface Group {
   usage_limit: number;
   status: GroupStatus;
   launched_at: string;
+  game: string;
+  plan_id: string;
+  plan_name: string;
+  account_count: number;
+  duration_minutes: number;
+  expires_at: string | null;
   auto_stopped: boolean;
+  stop_reason: string | null;
   relaunched: boolean;
 }
 

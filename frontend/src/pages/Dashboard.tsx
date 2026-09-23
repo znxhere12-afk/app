@@ -6,6 +6,7 @@ import ActiveGroupsCard from "@/components/ActiveGroupsCard";
 import BuyCreditsCard from "@/components/BuyCreditsCard";
 import CreditTransferCard from "@/components/CreditTransferCard";
 import ExpiryRemindersCard from "@/components/ExpiryRemindersCard";
+import ClanWarRulesCard from "@/components/ClanWarRulesCard";
 import LaunchGroupCard from "@/components/LaunchGroupCard";
 import RelaunchCard from "@/components/RelaunchCard";
 import SlotAlertsCard from "@/components/SlotAlertsCard";
@@ -64,6 +65,7 @@ export default function Dashboard() {
         <div className="space-y-6 lg:col-span-5">
           <BuyCreditsCard />
           <CreditTransferCard />
+          <ClanWarRulesCard />
         </div>
       </div>
     </div>

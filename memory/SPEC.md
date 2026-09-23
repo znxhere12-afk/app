@@ -1,9 +1,26 @@
 # Clan Nexus — App Spec
 
-Dark-themed gaming & clan management dashboard (Clan Nexus). FastAPI + MongoDB backend,
-Vite + React 19 + Tailwind v4 + shadcn/ui frontend. Theme: #0D0F12 background, #15181E cards,
-neon green #22C55E + yellow #FACC15 accents. Fonts: Outfit (headings), Plus Jakarta Sans (body),
-JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
+Free Fire clan-war management dashboard. FastAPI + MongoDB backend, Vite + React 19 + Tailwind v4.
+Theme: #0D0F12 bg, #15181E cards, neon green #22C55E + yellow #FACC15. Fonts: Outfit / Plus Jakarta
+Sans / JetBrains Mono. Dark-by-default.
+
+## Free Fire clan-war model (lib/catalog.py)
+- `GAME = "Free Fire"`; `CLAN_WAR_RULES` (5 terms) must be accepted once — stored as
+  `users.rules_accepted_at`, enforced on launch (400 otherwise), also settable via
+  POST /api/auth/accept-rules.
+- `PLANS`: duo-2 (2 accounts/30 min/+0), squad-4 (4/60/+40, default), war-6 (6/120/+90).
+  Launch cost = region cost + plan extra_cost.
+- Launch creates `plan.account_count` **player_accounts** (ign `NXnnn·FFn`, 9-digit uid, the run's
+  clan_id, status offline→cycling, join_request sent→accepted, cycles capped at 3). Each GET
+  /api/groups cycles them online/offline and accepts pending join requests.
+- A run also auto-stops on `expires_at` (plan time limit) with `stop_reason="time_limit"`, same
+  path as the capacity auto-stop (`stop_reason="capacity"`); its accounts are forced offline.
+- `access_codes`: admin-minted `FF-XXXXXXXX` codes. Optional at sign-up; a valid unused code
+  unlocks the account (`users.unlocked=true`) with +500 Basic / +150 Premium and is marked used.
+  Invalid/reused → 400.
+- **users.email is omitted when absent** (never stored as null) and the unique index is a partial
+  index on `{"email": {"$type": "string"}}` — storing null collided and made every email-less
+  sign-up fail with a 500.
 
 ## Domain model (Mongo collections, string uuid4 ids, aware-UTC datetimes)
 - `users` — username (+username_lower unique), email (unique sparse), password_hash (pbkdf2_sha256),
@@ -49,10 +66,13 @@ JetBrains Mono (IDs/numbers). Dark-by-default (`class="dark"` on html).
   /auth/me GET · /auth/password POST (change password). Session = JWT in httpOnly cookie `cn_session`.
 - /catalog GET (regions, packs, binance_pay_id) — authed.
 - /payments GET/POST (submit claim → pending) — authed.
-- /groups GET (active + usage tick + auto-stop at capacity + timeline snapshot) · /groups POST
-  (launch; 400 on insufficient tier credits) · /groups/relaunchable GET (auto-stopped runs still
-  awaiting a replacement) · /groups/{id}/relaunch POST · /groups/{id}/stop POST ·
+- /groups GET (active + usage tick + account cycling + auto-stop on capacity/time + snapshot) ·
+  /groups POST (launch: region_id, clan_id, plan_id, accept_rules) ·
+  /groups/{id}/accounts GET (generated Free Fire player accounts) ·
+  /stats/clans GET (relaunch history: cycles + total/basic/premium cost per clan) ·
+  /groups/relaunchable GET · /groups/{id}/relaunch POST · /groups/{id}/stop POST ·
   /groups/{id} DELETE · /history GET ·
+- /admin/access-codes GET/POST (mint account access codes) ·
   /usage/timeline GET (oldest-first UsagePoint series, last 60 samples) ·
   /usage/timeline/groups GET (GroupTimeline: clans[] + points[{at, usage{clan_id:slots}}]) ·
   /stats/regions GET (RegionStat[]: launches + total_cost per region, trailing 30 days,

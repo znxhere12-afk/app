@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiDelete, apiGet, apiPost } from "@/lib/api";
+import PlayerAccountsPanel from "@/components/PlayerAccountsPanel";
 import { apiErrorMessage, fmtDateTime, fmtNumber } from "@/lib/format";
 import { isAtCapacity, isNearCapacity } from "@/lib/slots";
 import { useRelaunchGroup } from "@/lib/useRelaunchGroup";
@@ -122,7 +123,9 @@ export default function ActiveGroupsCard() {
                   <div>
                     <p className="font-mono text-base font-bold">Clan {g.clan_id}</p>
                     <p className="text-xs text-muted-foreground">
-                      {g.region_name} · Server #{g.server_number} · launched {fmtDateTime(g.launched_at)}
+                      {g.game} · {g.plan_name} · {g.account_count} accounts · {g.region_name} ·
+                      Server #{g.server_number}
+                      {g.expires_at ? ` · ends ${fmtDateTime(g.expires_at)}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -175,6 +178,7 @@ export default function ActiveGroupsCard() {
                     />
                   </div>
                 </div>
+                <PlayerAccountsPanel groupId={g.id} />
               </div>
             );
           })

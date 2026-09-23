@@ -7,6 +7,7 @@ from pymongo import ASCENDING, DESCENDING
 from lib.dates import now_utc
 from lib.db import db
 from lib.deps import clean_doc, require_admin
+from models.accounts import AccessCode, AccessCodeCreate
 from models.auth import UserOut
 from models.coupons import Coupon, CouponCreate
 from models.groups import Group, GroupEvent
@@ -146,6 +147,29 @@ async def refund_group(group_id: str, admin: UserOut = Depends(require_admin)):
 
 
 # --- coupons -------------------------------------------------------------
+
+
+@router.get("/access-codes", response_model=list[AccessCode])
+async def all_access_codes(admin: UserOut = Depends(require_admin)):
+    docs = await db.access_codes.find({}).sort("created_at", DESCENDING).to_list(500)
+    return [AccessCode(**clean_doc(d)) for d in docs]
+
+
+@router.post("/access-codes", response_model=AccessCode, status_code=201)
+async def mint_access_code(payload: AccessCodeCreate, admin: UserOut = Depends(require_admin)):
+    """Generate a code a new player redeems at sign-up to unlock their account."""
+    code = f"FF-{generate_code().removeprefix('NX-')}"
+    while await db.access_codes.find_one({"code": code}):
+        code = f"FF-{generate_code().removeprefix('NX-')}"
+    doc = AccessCode(
+        id=str(uuid.uuid4()),
+        code=code,
+        created_by=admin.username,
+        note=payload.note.strip() if payload.note else None,
+        created_at=now_utc(),
+    )
+    await db.access_codes.insert_one(doc.model_dump())
+    return doc
 
 
 @router.get("/coupons", response_model=list[Coupon])

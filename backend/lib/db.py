@@ -22,7 +22,12 @@ INDEXES: dict[str, list[IndexModel]] = {
     "users": [
         IndexModel([("id", ASCENDING)], name="id", unique=True),
         IndexModel([("username_lower", ASCENDING)], name="username_lower", unique=True),
-        IndexModel([("email", ASCENDING)], name="email", unique=True, sparse=True),
+        IndexModel(
+            [("email", ASCENDING)],
+            name="email_unique",
+            unique=True,
+            partialFilterExpression={"email": {"$type": "string"}},
+        ),
     ],
     "payments": [
         IndexModel([("id", ASCENDING)], name="id", unique=True),
@@ -52,6 +57,16 @@ INDEXES: dict[str, list[IndexModel]] = {
     "usage_snapshots": [
         IndexModel([("id", ASCENDING)], name="id", unique=True),
         IndexModel([("user_id", ASCENDING), ("at", DESCENDING)], name="user_at"),
+    ],
+    "player_accounts": [
+        IndexModel([("id", ASCENDING)], name="id", unique=True),
+        IndexModel([("group_id", ASCENDING), ("slot", ASCENDING)], name="group_slot"),
+        IndexModel([("user_id", ASCENDING)], name="user_id"),
+    ],
+    "access_codes": [
+        IndexModel([("id", ASCENDING)], name="id", unique=True),
+        IndexModel([("code", ASCENDING)], name="code", unique=True),
+        IndexModel([("created_at", DESCENDING)], name="created_at"),
     ],
 }
 

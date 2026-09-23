@@ -31,19 +31,42 @@ async def signup(payload: SignupCreate, response: Response):
     if payload.email and await db.users.find_one({"email": payload.email.lower()}):
         raise HTTPException(status_code=409, detail="Email is already registered")
 
+    # An access code is optional, but a supplied one must be real and unused.
+    code_doc = None
+    if payload.access_code:
+        code = payload.access_code.strip().upper()
+        code_doc = await db.access_codes.find_one({"code": code, "used_by": None})
+        if code_doc is None:
+            raise HTTPException(status_code=400, detail="Invalid or already-used access code")
+
     user_doc = {
         "id": str(uuid.uuid4()),
         "username": payload.username,
         "username_lower": username_lower,
-        "email": payload.email.lower() if payload.email else None,
         "password_hash": hash_password(payload.password),
         # welcome credits so a new commander can launch their first group right away
-        "basic_credits": 200,
-        "premium_credits": 50,
+        "basic_credits": 200 + (300 if code_doc else 0),
+        "premium_credits": 50 + (100 if code_doc else 0),
         "is_admin": False,
         "created_at": now_utc(),
+        "rules_accepted_at": None,
+        "unlocked": code_doc is not None,
     }
+    # The email key is omitted entirely when absent: storing null collides on the unique index.
+    if payload.email:
+        user_doc["email"] = payload.email.lower()
     await db.users.insert_one(user_doc)
+    if code_doc is not None:
+        await db.access_codes.update_one(
+            {"id": code_doc["id"]},
+            {
+                "$set": {
+                    "used_by": user_doc["id"],
+                    "used_by_username": user_doc["username"],
+                    "used_at": now_utc(),
+                }
+            },
+        )
     _set_session_cookie(response, user_doc["id"])
     return doc_to_user(user_doc)
 
@@ -69,6 +92,15 @@ async def logout(response: Response):
 @router.get("/auth/me", response_model=UserOut)
 async def me(user: UserOut = Depends(get_current_user)):
     return user
+
+
+@router.post("/auth/accept-rules", response_model=UserOut)
+async def accept_rules(user: UserOut = Depends(get_current_user)):
+    """Record acceptance of the Free Fire clan-war rules (idempotent)."""
+    if user.rules_accepted_at is None:
+        await db.users.update_one({"id": user.id}, {"$set": {"rules_accepted_at": now_utc()}})
+    doc = await db.users.find_one({"id": user.id})
+    return doc_to_user(doc or {})
 
 
 @router.post("/auth/password")

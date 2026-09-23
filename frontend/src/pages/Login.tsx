@@ -26,6 +26,7 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
+  const [accessCode, setAccessCode] = useState("");
 
   const afterAuth = (user: User, greeting: string) => {
     beginSession();
@@ -46,9 +47,15 @@ export default function Login() {
         username: username.trim(),
         password: signupPassword,
         email: email.trim() || undefined,
+        access_code: accessCode.trim() || undefined,
       }),
     onSuccess: (u) =>
-      afterAuth(u, "Account created — 200 Basic + 50 Premium welcome credits added"),
+      afterAuth(
+        u,
+        u.unlocked
+          ? "Account unlocked — 500 Basic + 150 Premium credits added"
+          : "Account created — 200 Basic + 50 Premium welcome credits added",
+      ),
     onError: (e) => toast.error("Sign up failed", { description: apiErrorMessage(e) }),
   });
 
@@ -229,6 +236,20 @@ export default function Login() {
                         onChange={(e) => setSignupPassword(e.target.value)}
                         data-testid="signup-password-input"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-access-code">Access Code (optional)</Label>
+                      <Input
+                        id="signup-access-code"
+                        placeholder="FF-XXXXXXXX from your admin"
+                        value={accessCode}
+                        onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                        data-testid="signup-access-code-input"
+                        className="font-mono uppercase"
+                      />
+                      <p className="text-[11px] text-muted-foreground">
+                        An admin code unlocks your account with 500 Basic + 150 Premium credits.
+                      </p>
                     </div>
                     <Button
                       type="submit"

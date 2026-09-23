@@ -27,7 +27,7 @@ import {
 import StatusBadge from "@/components/StatusBadge";
 import { apiGet, apiPost } from "@/lib/api";
 import { apiErrorMessage, copyText, fmtDate, fmtDateTime, fmtNumber, fmtUsd } from "@/lib/format";
-import type { Coupon, CreditType, Group, GroupStatus, Payment, User } from "@/lib/types";
+import type { AccessCode, Coupon, CreditType, Group, GroupStatus, Payment, User } from "@/lib/types";
 
 function GroupStatusBadge({ status, testid }: { status: GroupStatus; testid?: string }) {
   const cls =
@@ -68,6 +68,26 @@ export default function Admin() {
     queryKey: ["admin-coupons"],
     queryFn: () => apiGet<Coupon[]>("/admin/coupons"),
     retry: false,
+  });
+  const codes = useQuery({
+    queryKey: ["admin-codes"],
+    queryFn: () => apiGet<AccessCode[]>("/admin/access-codes"),
+    retry: false,
+  });
+
+  const [codeNote, setCodeNote] = useState("");
+  const [newCode, setNewCode] = useState<string | null>(null);
+
+  const mintCode = useMutation({
+    mutationFn: () =>
+      apiPost<AccessCode>("/admin/access-codes", { note: codeNote.trim() || undefined }),
+    onSuccess: (c) => {
+      toast.success("Access code generated", { description: `${c.code} — share it with the player.` });
+      setNewCode(c.code);
+      setCodeNote("");
+      void qc.invalidateQueries({ queryKey: ["admin-codes"] });
+    },
+    onError: (e) => toast.error("Could not generate code", { description: apiErrorMessage(e) }),
   });
 
   const [adjustUser, setAdjustUser] = useState("");
@@ -187,6 +207,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="coupons" data-testid="admin-tab-coupons">
             Coupons
+          </TabsTrigger>
+          <TabsTrigger value="codes" data-testid="admin-tab-codes">
+            Access Codes
           </TabsTrigger>
         </TabsList>
 
@@ -596,6 +619,109 @@ export default function Admin() {
                     <TableCell className="text-xs">{fmtDateTime(c.created_at)}</TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+        {/* ACCESS CODES */}
+        <TabsContent value="codes" className="mt-4 space-y-6">
+          <Card className="rounded-xl border-[#232834] bg-[#15181E]/95 shadow-xl backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="font-heading text-base tracking-tight">
+                Generate Account Access Code
+              </CardTitle>
+              <CardDescription>
+                A player enters this code at sign-up to unlock their account (+500 Basic / +150
+                Premium). Each code works once.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-end">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="code-note">Note (optional)</Label>
+                  <Input
+                    id="code-note"
+                    placeholder="e.g. for squad leader Priya"
+                    value={codeNote}
+                    onChange={(e) => setCodeNote(e.target.value)}
+                    data-testid="admin-code-note-input"
+                  />
+                </div>
+                <Button
+                  data-testid="admin-generate-code-btn"
+                  disabled={mintCode.isPending}
+                  onClick={() => mintCode.mutate()}
+                >
+                  Generate Code
+                </Button>
+              </div>
+              {newCode && (
+                <div
+                  data-testid="admin-new-code-box"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[#22C55E]/40 bg-[#062E1A] px-3 py-2"
+                >
+                  <span data-testid="admin-new-code" className="font-mono font-bold text-[#4ADE80]">
+                    {newCode}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    aria-label="Copy access code"
+                    data-testid="admin-copy-code-btn"
+                    onClick={async () => {
+                      const ok = await copyText(newCode);
+                      if (ok) toast.success("Copied access code");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-[#232834] bg-[#15181E]/95 py-0 shadow-xl backdrop-blur-sm">
+            <Table data-testid="admin-codes-table">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Note</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Used By</TableHead>
+                  <TableHead>Created</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(codes.data ?? []).length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No access codes yet.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  (codes.data ?? []).map((c) => (
+                    <TableRow key={c.id} data-testid={`admin-code-row-${c.id}`}>
+                      <TableCell className="font-mono font-semibold">{c.code}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{c.note ?? "—"}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          data-testid={`admin-code-status-${c.id}`}
+                          className={
+                            c.used_by
+                              ? "border-[#2E3646] text-muted-foreground"
+                              : "border-[#22C55E]/40 text-[#4ADE80]"
+                          }
+                        >
+                          {c.used_by ? "used" : "unused"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs">{c.used_by_username ?? "—"}</TableCell>
+                      <TableCell className="text-xs">{fmtDateTime(c.created_at)}</TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </Card>

@@ -25,9 +25,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import StatusBadge from "@/components/StatusBadge";
-import { apiGet, apiPost } from "@/lib/api";
+import { apiGet, apiPost, apiPut } from "@/lib/api";
 import { apiErrorMessage, copyText, fmtDate, fmtDateTime, fmtNumber, fmtUsd } from "@/lib/format";
-import type { AccessCode, Coupon, CreditType, Group, GroupStatus, Payment, User } from "@/lib/types";
+import type {
+  AccessCode,
+  Coupon,
+  CreditType,
+  Group,
+  GroupStatus,
+  Payment,
+  SupportLinks,
+  User,
+} from "@/lib/types";
 
 function GroupStatusBadge({ status, testid }: { status: GroupStatus; testid?: string }) {
   const cls =
@@ -77,6 +86,31 @@ export default function Admin() {
 
   const [codeNote, setCodeNote] = useState("");
   const [newCode, setNewCode] = useState<string | null>(null);
+
+  // --- support / contact links -------------------------------------------
+  const support = useQuery({
+    queryKey: ["support-links"],
+    queryFn: () => apiGet<SupportLinks>("/support-links"),
+  });
+  const [waUrl, setWaUrl] = useState<string | null>(null);
+  const [tgUrl, setTgUrl] = useState<string | null>(null);
+  const waValue = waUrl ?? support.data?.whatsapp_url ?? "";
+  const tgValue = tgUrl ?? support.data?.telegram_url ?? "";
+
+  const saveLinks = useMutation({
+    mutationFn: () =>
+      apiPut<SupportLinks>("/admin/support-links", {
+        whatsapp_url: waValue.trim(),
+        telegram_url: tgValue.trim(),
+      }),
+    onSuccess: (l) => {
+      toast.success("Contact links updated", { description: "The login screen now uses them." });
+      qc.setQueryData(["support-links"], l);
+      setWaUrl(null);
+      setTgUrl(null);
+    },
+    onError: (e) => toast.error("Could not save links", { description: apiErrorMessage(e) }),
+  });
 
   const mintCode = useMutation({
     mutationFn: () =>
@@ -210,6 +244,9 @@ export default function Admin() {
           </TabsTrigger>
           <TabsTrigger value="codes" data-testid="admin-tab-codes">
             Access Codes
+          </TabsTrigger>
+          <TabsTrigger value="contact" data-testid="admin-tab-contact">
+            Contact Links
           </TabsTrigger>
         </TabsList>
 
@@ -631,8 +668,8 @@ export default function Admin() {
                 Generate Account Access Code
               </CardTitle>
               <CardDescription>
-                A player enters this code at sign-up to unlock their account (+500 Basic / +150
-                Premium). Each code works once.
+                A player enters this code at sign-up to unlock their account. No credits are
+                granted — the player buys them or redeems a coupon. Each code works once.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -724,6 +761,56 @@ export default function Admin() {
                 )}
               </TableBody>
             </Table>
+          </Card>
+        </TabsContent>
+
+        {/* CONTACT LINKS */}
+        <TabsContent value="contact" className="mt-4 space-y-6">
+          <Card className="rounded-xl border-[#232834] bg-[#15181E]/95 shadow-xl backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="font-heading text-base tracking-tight">
+                Login Page Contact Links
+              </CardTitle>
+              <CardDescription>
+                These power the WhatsApp and Telegram buttons under "Need help? Contact Admin".
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="wa-url">WhatsApp link</Label>
+                  <Input
+                    id="wa-url"
+                    placeholder="https://wa.me/8801700000000"
+                    value={waValue}
+                    onChange={(e) => setWaUrl(e.target.value)}
+                    data-testid="admin-whatsapp-url-input"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tg-url">Telegram link</Label>
+                  <Input
+                    id="tg-url"
+                    placeholder="https://t.me/clannexus_admin"
+                    value={tgValue}
+                    onChange={(e) => setTgUrl(e.target.value)}
+                    data-testid="admin-telegram-url-input"
+                  />
+                </div>
+              </div>
+              <Button
+                className="font-semibold"
+                data-testid="admin-save-links-btn"
+                disabled={saveLinks.isPending || !waValue.trim() || !tgValue.trim()}
+                onClick={() => saveLinks.mutate()}
+              >
+                {saveLinks.isPending ? "Saving…" : "Save Contact Links"}
+              </Button>
+              <p className="text-xs text-muted-foreground" data-testid="admin-links-current">
+                Live now — WhatsApp: {support.data?.whatsapp_url ?? "…"} · Telegram:{" "}
+                {support.data?.telegram_url ?? "…"}
+              </p>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

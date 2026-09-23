@@ -115,3 +115,12 @@ Sans / JetBrains Mono. Dark-by-default.
 ## Auth / credentials
 - Login by username or email + password; admin flagged in DB (is_admin), sees nav Admin link + /admin.
 - Credentials in memory/test_credentials.md. Seed via `cd /app/backend && python seed.py` (idempotent).
+
+## Update — no free credits + editable contact links
+- Signup now grants **0 Basic / 0 Premium** credits, with or without an access code. An access
+  code only unlocks the account (`unlocked: true`); credits must be bought via Binance, received
+  in a transfer, redeemed from a coupon, or granted by an admin.
+- `app_settings` collection (`key: "support_links"`) stores the login page's contact links.
+  - `GET /api/support-links` (public) → `{whatsapp_url, telegram_url}`
+  - `PUT /api/admin/support-links` (admin only, 403 otherwise)
+  - Admin Panel → **Contact Links** tab edits them; Login page reads them live.

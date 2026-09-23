@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Gamepad2, MessageCircle, Send, Zap, Coins, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -10,11 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiPost } from "@/lib/api";
+import { apiGet, apiPost } from "@/lib/api";
 import { apiErrorMessage } from "@/lib/format";
 import { beginSession } from "@/lib/session";
 import { useMe } from "@/lib/useMe";
-import type { User } from "@/lib/types";
+import type { SupportLinks, User } from "@/lib/types";
 
 export default function Login() {
   const qc = useQueryClient();
@@ -27,6 +27,12 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [accessCode, setAccessCode] = useState("");
+
+  // Admin-editable contact links (falls back to the stored defaults until loaded).
+  const support = useQuery({
+    queryKey: ["support-links"],
+    queryFn: () => apiGet<SupportLinks>("/support-links"),
+  });
 
   const afterAuth = (user: User, greeting: string) => {
     beginSession();
@@ -53,8 +59,8 @@ export default function Login() {
       afterAuth(
         u,
         u.unlocked
-          ? "Account unlocked — 500 Basic + 150 Premium credits added"
-          : "Account created — 200 Basic + 50 Premium welcome credits added",
+          ? "Account unlocked — buy credits to start launching"
+          : "Account created — buy credits to start launching",
       ),
     onError: (e) => toast.error("Sign up failed", { description: apiErrorMessage(e) }),
   });
@@ -198,7 +204,7 @@ export default function Login() {
                   <div className="space-y-1">
                     <h2 className="font-heading text-2xl font-bold tracking-tight">Create Account</h2>
                     <p className="text-sm text-muted-foreground">
-                      New commanders get 200 Basic + 50 Premium credits.
+                      New accounts start at 0 credits — top up via Binance or a gift coupon.
                     </p>
                   </div>
                   <form className="space-y-4" onSubmit={onSignup}>
@@ -248,7 +254,8 @@ export default function Login() {
                         className="font-mono uppercase"
                       />
                       <p className="text-[11px] text-muted-foreground">
-                        An admin code unlocks your account with 500 Basic + 150 Premium credits.
+                        An admin code unlocks your account. Credits are never free — buy or
+                        redeem a coupon.
                       </p>
                     </div>
                     <Button
@@ -275,7 +282,7 @@ export default function Login() {
               </div>
               <div className="flex gap-2">
                 <a
-                  href="https://wa.me/8801700000000"
+                  href={support.data?.whatsapp_url ?? "#"}
                   target="_blank"
                   rel="noreferrer"
                   data-testid="contact-whatsapp-btn"
@@ -286,7 +293,7 @@ export default function Login() {
                   WhatsApp
                 </a>
                 <a
-                  href="https://t.me/clannexus_admin"
+                  href={support.data?.telegram_url ?? "#"}
                   target="_blank"
                   rel="noreferrer"
                   data-testid="contact-telegram-btn"

@@ -19,6 +19,11 @@ export interface User {
   unlocked: boolean;
 }
 
+export interface SupportLinks {
+  whatsapp_url: string;
+  telegram_url: string;
+}
+
 export interface Plan {
   id: string;
   name: string;

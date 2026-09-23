@@ -44,9 +44,9 @@ async def signup(payload: SignupCreate, response: Response):
         "username": payload.username,
         "username_lower": username_lower,
         "password_hash": hash_password(payload.password),
-        # welcome credits so a new commander can launch their first group right away
-        "basic_credits": 200 + (300 if code_doc else 0),
-        "premium_credits": 50 + (100 if code_doc else 0),
+        # No free credits, ever — every balance must be bought, gifted or admin-granted.
+        "basic_credits": 0,
+        "premium_credits": 0,
         "is_admin": False,
         "created_at": now_utc(),
         "rules_accepted_at": None,

@@ -45,6 +45,7 @@ export default defineConfig(async () => {
       // on the package's own `apply: "serve"`.
       ...(emergentOverlay ? [emergentOverlay] : []),
     ],
+    base: "/app/",
     resolve: {
       alias: [
         { find: "@", replacement: path.resolve(__dirname, "./src") },
